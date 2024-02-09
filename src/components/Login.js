@@ -1,12 +1,16 @@
 import { useRef, useState } from "react";
 import Header from "./Header";
 import { formValidation } from "../Utils/Validate";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword,updateProfile } from "firebase/auth";
-
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { useDispatch } from "react-redux";
 import { auth } from "../Utils/firebase"
 import { useNavigate } from "react-router-dom";
+import { addUser } from "../Utils/userSlice";
+
 const Login = () => {
-    const navigate = useNavigate()
+    const navigate = useNavigate();
+    const dispatch = useDispatch()
+
     const [isSignIn, SetissignIn] = useState(true);
     const [error, Seterror] = useState({})
 
@@ -17,7 +21,7 @@ const Login = () => {
         SetissignIn(!isSignIn);
     }
 
-    const submit = (type) => {
+    const submit = () => {
         const errorMsg = formValidation(email.current.value, password.current.value);
         Seterror(errorMsg);
         console.log(email.current.value, "click")
@@ -27,34 +31,32 @@ const Login = () => {
         if (!isSignIn) {
             createUserWithEmailAndPassword(auth, email.current.value, password.current.value)
                 .then((userCredential) => {
-                    updateProfile(auth.currentUser, {
-                        displayName: name.current.value, photoURL: "https://example.com/jane-q-user/profile.jpg"
-                      }).then(() => {
-                        // Profile updated!
-                        // ...
-                      }).catch((error) => {
-                        // An error occurred
-                        // ...
-                      });
                     // Signed up 
                     const user = userCredential.user;
-                    console.log(user, "user signup");
-                    navigate("/browser");
+                    updateProfile(user, {
+                        displayName: name.current.value, photoURL: "https://example.com/jane-q-user/profile.jpg"
+                    }).then(() => {
+                        // Profile updated!
+                        const { uid, email, displayName } = auth.currentUser;
+                        dispatch(addUser(
+                            { uid: uid, email: email, name: displayName }
+                        ));
+                    }).catch((error) => {
+
+                    });
                 })
                 .catch((error) => {
                     const errorCode = error.code;
                     const errorMessage = error.message;
                 });
-        } 
+        }
         else {
 
             signInWithEmailAndPassword(auth, email.current.value, password.current.value)
                 .then((userCredential) => {
                     // Signed in 
                     const user = userCredential.user;
-                    console.log(user, "user signIn");
-                    navigate("/browser");
-
+                    
                 })
                 .catch((error) => {
                     const errorCode = error.code;
@@ -71,8 +73,8 @@ const Login = () => {
                 <form onSubmit={(e) => e.preventDefault()} className="flex flex-col text-white ">
                     <h1 className=" font-bold text-3xl mb-8" > {isSignIn ? "Sign In" : "Sign Up"}</h1>
                     {!isSignIn &&
-                        <input ref={name} 
-                        type="text" placeholder=" Enter your Name" className="p-4 mb-4  rounded bg-gray-700" />
+                        <input ref={name}
+                            type="text" placeholder=" Enter your Name" className="p-4 mb-4  rounded bg-gray-700" />
                     }
                     <input
                         ref={email}
@@ -89,6 +91,3 @@ const Login = () => {
 }
 export default Login;
 
-
-// import { getAuth, updateProfile } from "firebase/auth";
-// const auth = getAuth();
