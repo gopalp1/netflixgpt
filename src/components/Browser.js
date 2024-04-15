@@ -7,7 +7,7 @@ const Browser =( )=>{
 
 
     return(
-        <div className="bg-black">
+        <div className="bg-black border-box ">
             <Header/>
             <MainContiner/>
             <SecondaryContainer/>
